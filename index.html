@@ -132,7 +132,7 @@
     };
 
     // Generar matriz espejo (bidireccional)
-    Object.keys(MATRIZ_PRECIOS).forEach(key => {
+    Object.keys(MATRIZ_PRECIOS).forEach(function(key) {
       const partes = key.split('-');
       const o = partes[0];
       const d = partes[1];
@@ -220,13 +220,11 @@
     document.head.appendChild(link);
 
     if ('serviceWorker' in navigator) {
-      const swCode = `
-        self.addEventListener('install', e => self.skipWaiting());
-        self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));
-      `;
+      const swCode = "self.addEventListener('install', function(e) { self.skipWaiting(); });" +
+                     "self.addEventListener('fetch', function(e) { e.respondWith(fetch(e.request).catch(function() { return caches.match(e.request); })); });";
       const swBlob = new Blob([swCode], { type: 'text/javascript' });
       const swURL = URL.createObjectURL(swBlob);
-      navigator.serviceWorker.register(swURL).catch(() => {});
+      navigator.serviceWorker.register(swURL).catch(function() {});
     }
   </script>
 </body>

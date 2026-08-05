@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TÚ MANDADERO</title>
+  
+  <!-- Configuración de Iconos (Favicon y Pantalla de Inicio en iOS/Android) -->
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="apple-touch-icon" href="logo.png">
+  
+  <!-- Configuración PWA y Móvil -->
+  <meta name="theme-color" content="#006A38">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Tú Mandadero">
+  
+  <!-- Estilos -->
+  <style>
+    :root {
+      --verde-principal: #006A38;
+      --verde-claro: #4CAF50;
+      --naranja-accent: #FF7A00;
+      --morado-accent: #A12BB3;
+      --fondo-app: #F2F5F3;
+      --card-bg: #FFFFFF;
+      --texto-oscuro: #1A2E24;
+      --borde-input: #D2E0D8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { background-color: var(--fondo-app); color: var(--texto-oscuro); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 15px; }
+    
+    .card { background-color: var(--card-bg); padding: 25px 20px; border-radius: 20px; width: 100%; max-width: 380px; text-align: center; box-shadow: 0 10px 30px rgba(0, 106, 56, 0.1); border: 1px solid rgba(0, 106, 56, 0.08); }
+    
+    .header { margin-bottom: 20px; }
+    .header .app-logo { width: 90px; height: 90px; object-fit: contain; margin-bottom: 10px; }
+    .header h1 { font-size: 22px; color: var(--verde-principal); text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; }
+    .header p { font-size: 13px; color: #556B60; margin-top: 5px; font-weight: 500; }
+    
+    .form-group { margin-bottom: 15px; text-align: left; }
+    .form-group label { display: block; font-size: 12px; color: var(--verde-principal); font-weight: 700; margin-bottom: 5px; text-transform: uppercase; }
+    
+    input, select, textarea {
+      width: 100%; background: #F9FBF9; border: 1.5px solid var(--borde-input); color: var(--texto-oscuro); padding: 12px; border-radius: 10px; font-size: 14px; outline: none; transition: all 0.3s ease;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--verde-claro); background: #FFFFFF; box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.15); }
+    select option { background-color: #FFFFFF; color: var(--texto-oscuro); }
+    textarea { resize: none; height: 70px; }
+
+    .price-box { background-color: #EBF5EE; border: 1px dashed var(--verde-claro); border-radius: 12px; padding: 14px; margin: 20px 0; text-align: center; }
+    .price-box span { font-size: 19px; font-weight: 800; color: var(--verde-principal); }
+
+    .btn-submit {
+      width: 100%; background: linear-gradient(135deg, var(--naranja-accent), #FF5500); color: #FFFFFF; border: none; padding: 15px; font-weight: 800; border-radius: 10px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 15px rgba(255, 122, 0, 0.3);
+    }
+    .btn-submit:active { transform: scale(0.98); }
+    
+    .footer-note { font-size: 11px; color: var(--morado-accent); margin-top: 15px; font-weight: 600; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="header">
+      <img src="logo.png" alt="Tú Mandadero Logo" class="app-logo">
+      <h1>TÚ MANDADERO</h1>
+      <p>La solución tecnológica para tu Delivery y mandados</p>
+    </div>
+
+    <form id="deliveryForm">
+      <div class="form-group">
+        <label>📞 Tu Teléfono</label>
+        <input type="tel" id="telefono" placeholder="Ej: 04121149241" required>
+      </div>
+
+      <div class="form-group">
+        <label>📍 ¿Dónde te buscamos?</label>
+        <select id="origen" required>
+          <option value="" disabled selected>Selecciona origen</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>🏁 ¿A dónde vas?</label>
+        <select id="destino" required>
+          <option value="" disabled selected>Selecciona destino</option>
+        </select>
+      </div>
+
+      <div class="price-box">
+        <span id="txtResultado">Selecciona tu ruta</span>
+      </div>
+
+      <div class="form-group">
+        <label>🗺️ Punto exacto / Referencia</label>
+        <textarea id="referencia" placeholder="Detalles de entrega o dirección exactas..."></textarea>
+      </div>
+
+      <button type="button" class="btn-submit" onclick="enviarWhatsApp()">
+        <span>🛵</span> SOLICITAR DELIVERY
+      </button>
+    </form>
+
+    <p class="footer-note">Esta es una versión DEMO de prueba.</p>
+  </div>
+
+  <script>
+    // --- DATOS Y CONFIGURACIÓN ---
+    const PHONE_NUMBER = "584121149241";[cite: 1, 2]
+
+    const ZONAS_DATA = {
+      1: "📍 Casco Central (Base)",
+      2: "🏥 Hospital / Clínica",
+      3: "🛒 Centro Comercial",
+      4: "🏡 Urbanización Lejana"
+    };[cite: 1, 2]
+
+    const MATRIZ_PRECIOS = {
+      "1-1": 1.5, "2-2": 2.0, "3-3": 2.0, "4-4": 3.0,
+      "1-2": 2.5, "1-3": 3.0, "1-4": 5.0,
+      "2-3": 3.5, "2-4": 6.0,
+      "3-4": 7.0
+    };[cite: 1, 2]
+
+    // Matriz espejo (bidireccional)
+    Object.keys(MATRIZ_PRECIOS).forEach(key => {
+      const [o, d] = key.split('-');
+      MATRIZ_PRECIOS[`${d}-${o}`] = MATRIZ_PRECIOS[key];
+    });[cite: 1, 2]
+
+    let precioActual = 0.0;[cite: 1, 2]
+
+    // --- CARGAR OPCIONES EN SELECTS ---
+    const selectOrigen = document.getElementById("origen");[cite: 1, 2]
+    const selectDestino = document.getElementById("destino");[cite: 1, 2]
+
+    Object.entries(ZONAS_DATA).forEach(([id, nombre]) => {
+      selectOrigen.add(new Option(nombre, id));
+      selectDestino.add(new Option(nombre, id));
+    });[cite: 1, 2]
+
+    // --- LÓGICA DE CÁLCULO DE TARIFA ---
+    function calcularTarifa() {
+      const o = selectOrigen.value;
+      const d = selectDestino.value;
+
+      if (!o || !d) return;
+
+      if (o === d) {
+        precioActual = 2.0;[cite: 1, 2]
+      } else {
+        precioActual = MATRIZ_PRECIOS[`${o}-${d}`] || 0.0;[cite: 1, 2]
+      }
+
+      const txtResultado = document.getElementById("txtResultado");
+      if (precioActual > 0) {
+        txtResultado.innerText = `Total Estimado: $${precioActual.toFixed(2)}`;[cite: 1, 2]
+      } else {
+        txtResultado.innerText = "Ruta no tarifada aún";[cite: 1, 2]
+      }
+    }
+
+    selectOrigen.addEventListener("change", calcularTarifa);[cite: 1, 2]
+    selectDestino.addEventListener("change", calcularTarifa);[cite: 1, 2]
+
+    // --- ENVÍO A WHATSAPP ---
+    function enviarWhatsApp() {
+      const telefono = document.getElementById("telefono").value;[cite: 1, 2]
+      const referencia = document.getElementById("referencia").value;[cite: 1, 2]
+      const idOrigen = selectOrigen.value;[cite: 1, 2]
+      const idDestino = selectDestino.value;[cite: 1, 2]
+
+      if (precioActual === 0) {
+        alert("Selecciona una ruta válida primero");[cite: 1, 2]
+        return;
+      }
+
+      const nombreOrigen = ZONAS_DATA[idOrigen] || "Desconocido";[cite: 1, 2]
+      const nombreDestino = ZONAS_DATA[idDestino] || "Desconocido";[cite: 1, 2]
+
+      const texto = `*SOLICITUD DE DELIVERY - TÚ MANDADERO*\n` +
+                    `Origen: ${nombreOrigen}\n` +
+                    `Destino: ${nombreDestino}\n` +
+                    `Teléfono: ${telefono}\n` +
+                    `Ref: ${referencia}\n` +
+                    `💰 *Precio Estimado: $${precioActual.toFixed(2)}*`;[cite: 1, 2]
+
+      const url = `https://wa.me/${PHONE_NUMBER}?text=${encodeURIComponent(texto)}`;[cite: 1, 2]
+      window.open(url, "_blank");[cite: 1, 2]
+    }
+
+    // --- MANIFEST DINÁMICO CON COLORES ACTUALIZADOS ---
+    const manifestData = {
+      name: "TÚ MANDADERO",
+      short_name: "Tú Mandadero",
+      start_url: ".",
+      display: "standalone",
+      background_color: "#F2F5F3",
+      theme_color: "#006A38",
+      icons: [
+        {
+          src: "logo.png",
+          sizes: "192x192",
+          type: "image/png"
+        },
+        {
+          src: "logo.png",
+          sizes: "512x512",
+          type: "image/png"
+        }
+      ]
+    };
+
+    const manifestBlob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
+    const manifestURL = URL.createObjectURL(manifestBlob);
+    const link = document.createElement('link');
+    link.rel = 'manifest';
+    link.href = manifestURL;
+    document.head.appendChild(link);
+
+    // Registrar Service Worker para soporte offline/PWA
+    if ('serviceWorker' in navigator) {
+      const swCode = `
+        self.addEventListener('install', e => self.skipWaiting());
+        self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));
+      `;
+      const swBlob = new Blob([swCode], { type: 'text/javascript' });
+      const swURL = URL.createObjectURL(swBlob);
+      navigator.serviceWorker.register(swURL).catch(() => {});
+    }
+  </script>
+</body>
+</html>

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>TÚ MANDADERO</title>
   
-  <!-- Configuración de Iconos (Favicon y Pantalla de Inicio en iOS/Android) -->
+  <!-- Configuración de Iconos -->
   <link rel="icon" type="image/png" href="logo.png">
   <link rel="apple-touch-icon" href="logo.png">
   
@@ -75,30 +75,38 @@
       </div>
 
       <div class="form-group">
-        <label>📍 ¿Dónde te buscamos?</label>
-        <select id="origen" required>
-          <option value="" disabled selected>Selecciona origen</option>
+        <label>📍 ¿Dónde buscamos el paquete / retiro?</label>
+        <select id="origen" onchange="calcularTarifa()" required>
+          <option value="" disabled selected>Selecciona origen (retiro)</option>
+          <option value="1">📍 Casco Central (Base)</option>
+          <option value="2">🏥 Hospital / Clínica</option>
+          <option value="3">🛒 Centro Comercial</option>
+          <option value="4">🏡 Urbanización Lejana</option>
         </select>
       </div>
 
       <div class="form-group">
-        <label>🏁 ¿A dónde vas?</label>
-        <select id="destino" required>
-          <option value="" disabled selected>Selecciona destino</option>
+        <label>🏁 ¿A dónde entregamos?</label>
+        <select id="destino" onchange="calcularTarifa()" required>
+          <option value="" disabled selected>Selecciona destino (entrega)</option>
+          <option value="1">📍 Casco Central (Base)</option>
+          <option value="2">🏥 Hospital / Clínica</option>
+          <option value="3">🛒 Centro Comercial</option>
+          <option value="4">🏡 Urbanización Lejana</option>
         </select>
       </div>
 
       <div class="price-box">
-        <span id="txtResultado">Selecciona tu ruta</span>
+        <span id="txtResultado">Selecciona la ruta del envío</span>
       </div>
 
       <div class="form-group">
-        <label>🗺️ Punto exacto / Referencia</label>
-        <textarea id="referencia" placeholder="Detalles de entrega o dirección exactas..."></textarea>
+        <label>🗺️ Lugar exacto / Referencia / Paquete</label>
+        <textarea id="referencia" placeholder="Describe qué hay que llevar o dirección exacta de entrega..."></textarea>
       </div>
 
       <button type="button" class="btn-submit" onclick="enviarWhatsApp()">
-        <span>🛵</span> SOLICITAR DELIVERY
+        <span>🛒</span> SOLICITAR DELIVERY
       </button>
     </form>
 
@@ -107,90 +115,90 @@
 
   <script>
     // --- DATOS Y CONFIGURACIÓN ---
-    const PHONE_NUMBER = "584121149241";[cite: 1, 2]
+    const PHONE_NUMBER = "584121149241";
 
     const ZONAS_DATA = {
-      1: "📍 Casco Central (Base)",
-      2: "🏥 Hospital / Clínica",
-      3: "🛒 Centro Comercial",
-      4: "🏡 Urbanización Lejana"
-    };[cite: 1, 2]
+      "1": "📍 Casco Central (Base)",
+      "2": "🏥 Hospital / Clínica",
+      "3": "🛒 Centro Comercial",
+      "4": "🏡 Urbanización Lejana"
+    };
 
     const MATRIZ_PRECIOS = {
       "1-1": 1.5, "2-2": 2.0, "3-3": 2.0, "4-4": 3.0,
       "1-2": 2.5, "1-3": 3.0, "1-4": 5.0,
       "2-3": 3.5, "2-4": 6.0,
       "3-4": 7.0
-    };[cite: 1, 2]
+    };
 
-    // Matriz espejo (bidireccional)
+    // Generar matriz espejo (bidireccional)
     Object.keys(MATRIZ_PRECIOS).forEach(key => {
-      const [o, d] = key.split('-');
-      MATRIZ_PRECIOS[`${d}-${o}`] = MATRIZ_PRECIOS[key];
-    });[cite: 1, 2]
+      const partes = key.split('-');
+      const o = partes[0];
+      const d = partes[1];
+      MATRIZ_PRECIOS[d + '-' + o] = MATRIZ_PRECIOS[key];
+    });
 
-    let precioActual = 0.0;[cite: 1, 2]
-
-    // --- CARGAR OPCIONES EN SELECTS ---
-    const selectOrigen = document.getElementById("origen");[cite: 1, 2]
-    const selectDestino = document.getElementById("destino");[cite: 1, 2]
-
-    Object.entries(ZONAS_DATA).forEach(([id, nombre]) => {
-      selectOrigen.add(new Option(nombre, id));
-      selectDestino.add(new Option(nombre, id));
-    });[cite: 1, 2]
+    let precioActual = 0.0;
 
     // --- LÓGICA DE CÁLCULO DE TARIFA ---
     function calcularTarifa() {
-      const o = selectOrigen.value;
-      const d = selectDestino.value;
-
-      if (!o || !d) return;
-
-      if (o === d) {
-        precioActual = 2.0;[cite: 1, 2]
-      } else {
-        precioActual = MATRIZ_PRECIOS[`${o}-${d}`] || 0.0;[cite: 1, 2]
-      }
-
+      const selectO = document.getElementById("origen");
+      const selectD = document.getElementById("destino");
       const txtResultado = document.getElementById("txtResultado");
-      if (precioActual > 0) {
-        txtResultado.innerText = `Total Estimado: $${precioActual.toFixed(2)}`;[cite: 1, 2]
-      } else {
-        txtResultado.innerText = "Ruta no tarifada aún";[cite: 1, 2]
-      }
-    }
 
-    selectOrigen.addEventListener("change", calcularTarifa);[cite: 1, 2]
-    selectDestino.addEventListener("change", calcularTarifa);[cite: 1, 2]
+      if (!selectO || !selectD) return;
 
-    // --- ENVÍO A WHATSAPP ---
-    function enviarWhatsApp() {
-      const telefono = document.getElementById("telefono").value;[cite: 1, 2]
-      const referencia = document.getElementById("referencia").value;[cite: 1, 2]
-      const idOrigen = selectOrigen.value;[cite: 1, 2]
-      const idDestino = selectDestino.value;[cite: 1, 2]
+      const o = selectO.value;
+      const d = selectD.value;
 
-      if (precioActual === 0) {
-        alert("Selecciona una ruta válida primero");[cite: 1, 2]
+      if (!o || !d) {
+        txtResultado.innerText = "Selecciona la ruta del envío";
+        precioActual = 0.0;
         return;
       }
 
-      const nombreOrigen = ZONAS_DATA[idOrigen] || "Desconocido";[cite: 1, 2]
-      const nombreDestino = ZONAS_DATA[idDestino] || "Desconocido";[cite: 1, 2]
+      if (o === d) {
+        precioActual = 2.0;
+      } else {
+        const rutaKey = o + "-" + d;
+        precioActual = MATRIZ_PRECIOS[rutaKey] || 0.0;
+      }
 
-      const texto = `*SOLICITUD DE DELIVERY - TÚ MANDADERO*\n` +
-                    `Origen: ${nombreOrigen}\n` +
-                    `Destino: ${nombreDestino}\n` +
-                    `Teléfono: ${telefono}\n` +
-                    `Ref: ${referencia}\n` +
-                    `💰 *Precio Estimado: $${precioActual.toFixed(2)}*`;[cite: 1, 2]
-
-      const url = `https://wa.me/${PHONE_NUMBER}?text=${encodeURIComponent(texto)}`;[cite: 1, 2]
-      window.open(url, "_blank");[cite: 1, 2]
+      if (precioActual > 0) {
+        txtResultado.innerText = "Total Estimado: $" + precioActual.toFixed(2);
+      } else {
+        txtResultado.innerText = "Ruta no tarifada aún";
+      }
     }
 
-    // --- MANIFEST DINÁMICO CON COLORES ACTUALIZADOS ---
+    // --- ENVÍO A WHATSAPP ---
+    function enviarWhatsApp() {
+      const telefono = document.getElementById("telefono").value;
+      const referencia = document.getElementById("referencia").value;
+      const o = document.getElementById("origen").value;
+      const d = document.getElementById("destino").value;
+
+      if (!o || !d || precioActual === 0) {
+        alert("Selecciona un origen y destino válidos primero");
+        return;
+      }
+
+      const nombreOrigen = ZONAS_DATA[o] || "Desconocido";
+      const nombreDestino = ZONAS_DATA[d] || "Desconocido";
+
+      const texto = "*SOLICITUD DE DELIVERY - TÚ MANDADERO*\n" +
+                    "Origen (Retiro): " + nombreOrigen + "\n" +
+                    "Destino (Entrega): " + nombreDestino + "\n" +
+                    "Teléfono: " + telefono + "\n" +
+                    "Detalles/Ref: " + referencia + "\n" +
+                    "💰 *Precio Estimado: $" + precioActual.toFixed(2) + "*";
+
+      const url = "https://wa.me/" + PHONE_NUMBER + "?text=" + encodeURIComponent(texto);
+      window.open(url, "_blank");
+    }
+
+    // --- MANIFEST DINÁMICO PARA PWA ---
     const manifestData = {
       name: "TÚ MANDADERO",
       short_name: "Tú Mandadero",
@@ -199,16 +207,8 @@
       background_color: "#F2F5F3",
       theme_color: "#006A38",
       icons: [
-        {
-          src: "logo.png",
-          sizes: "192x192",
-          type: "image/png"
-        },
-        {
-          src: "logo.png",
-          sizes: "512x512",
-          type: "image/png"
-        }
+        { src: "logo.png", sizes: "192x192", type: "image/png" },
+        { src: "logo.png", sizes: "512x512", type: "image/png" }
       ]
     };
 
@@ -219,7 +219,6 @@
     link.href = manifestURL;
     document.head.appendChild(link);
 
-    // Registrar Service Worker para soporte offline/PWA
     if ('serviceWorker' in navigator) {
       const swCode = `
         self.addEventListener('install', e => self.skipWaiting());

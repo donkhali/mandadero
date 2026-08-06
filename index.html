@@ -107,12 +107,22 @@
 
   <script>
     const PHONE_NUMBER = "584143397243";
-    // URL de la hoja publicada como CSV en la web (sin autenticación requerida)
     const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS2XPrZvgzk_CYrEKrnOSdjU6E6Kt9_miaCh_fDGauVk6uxEiSs8rNmjxY76p_sehq0rIBh9fmhMBr_/pub?gid=0&single=true&output=csv";
 
     let ZONAS_DATA = {};
     let MATRIZ_PRECIOS = {};
     let precioActual = 0.0;
+
+    // Función auxiliar para convertir cualquier formato de texto a un número decimal flotante válido
+    function parsearPrecioDecimal(valorTexto) {
+      if (!valorTexto) return 0.0;
+      // Elimina símbolos de moneda, espacios y comillas
+      let limpio = valorTexto.replace(/[^0-9.,]/g, '').trim();
+      // Si contiene comas como separador decimal, las convierte a puntos
+      limpio = limpio.replace(',', '.');
+      let numero = parseFloat(limpio);
+      return isNaN(numero) ? 0.0 : numero;
+    }
 
     async function cargarBaseDeDatos() {
       const txtResultado = document.getElementById("txtResultado");
@@ -132,6 +142,7 @@
             return c.trim().replace(/^"|"$/g, '');
           });
 
+          // Omitir la primera fila si es un encabezado de texto
           if (index === 0 && isNaN(parseFloat(columnas[0]))) return;
 
           if (columnas.length >= 5) {
@@ -140,13 +151,13 @@
             const idD = columnas[2];
             const nomD = columnas[3];
             
-            const precioRaw = columnas[4].replace(',', '.');
-            const precio = parseFloat(precioRaw);
+            // Procesa el precio convirtiendo correctamente cualquier tipo de formato
+            const precio = parsearPrecioDecimal(columnas[4]);
 
             if (idO && nomO) ZONAS_DATA[idO] = nomO;
             if (idD && nomD) ZONAS_DATA[idD] = nomD;
 
-            if (!isNaN(precio)) {
+            if (precio > 0) {
               MATRIZ_PRECIOS[idO + "-" + idD] = precio;
             }
           }
@@ -264,7 +275,7 @@
                      "self.addEventListener('fetch', function(e) { e.respondWith(fetch(e.request).catch(function() { return caches.match(e.request); })); });";
       const swBlob = new Blob([swCode], { type: 'text/javascript' });
       const swURL = URL.createObjectURL(swBlob);
-      navigator.serviceWorker.register(swURL + '?v=8').catch(function() {});
+      navigator.serviceWorker.register(swURL + '?v=9').catch(function() {});
     }
   </script>
 </body>

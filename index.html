@@ -89,7 +89,7 @@
       </div>
 
       <div class="price-box">
-        <span id="txtResultado">Cargando tarifas...</span>
+        <span id="txtResultado">Conectando con Google Sheets...</span>
       </div>
 
       <div class="form-group">
@@ -107,59 +107,64 @@
 
   <script>
     const PHONE_NUMBER = "584143397243";
-    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS2XPrZvgzk_CYrEKrnOSdjU6E6Kt9_miaCh_fDGauVk6uxEiSs8rNmjxY76p_sehq0rIBh9fmhMBr_/pub?output=csv";
+    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1DvVaIoAIJT6MmCKR-R9Fv-JKSEN3TIQi8rN9_qY7jAw/export?format=csv&gid=0";
 
     let ZONAS_DATA = {};
     let MATRIZ_PRECIOS = {};
     let precioActual = 0.0;
 
-    // --- CARGAR DATOS DESDE GOOGLE SHEETS ---
     async function cargarBaseDeDatos() {
+      const txtResultado = document.getElementById("txtResultado");
       try {
         const respuesta = await fetch(SHEET_CSV_URL);
-        const csvTexto = await respuesta.text();
+        if (!respuesta.ok) throw new Error("Error conectando con la hoja");
         
-        // Split por líneas respetando saltos de línea
-        const filas = csvTexto.split(/\r?\n/).filter(f => f.trim() !== "");
+        const csvTexto = await respuesta.text();
+        const filas = csvTexto.split(/\r?\n/).filter(function(f) { return f.trim() !== ""; });
         
         ZONAS_DATA = {};
         MATRIZ_PRECIOS = {};
 
-        // Parseo del CSV
-        filas.forEach((fila, index) => {
-          if (index === 0) return; // Omitir encabezados si existen
-          
-          const columnas = fila.split(',').map(c => c.trim().replace(/^"|"$/g, ''));
-          
-          if (columnas.length >= 3) {
-            const origenId = columnas[0];
-            const origenNombre = columnas[1];
-            const destinoId = columnas[2];
-            const destinoNombre = columnas[3] || columnas[1]; 
-            const precio = parseFloat(columnas[4] || columnas[3]);
+        filas.forEach(function(fila, index) {
+          const separador = fila.includes(";") ? ";" : ",";
+          const columnas = fila.split(separador).map(function(c) {
+            return c.trim().replace(/^"|"$/g, '');
+          });
 
-            if (origenId && origenNombre) {
-              ZONAS_DATA[origenId] = origenNombre;
-            }
-            if (destinoId && destinoNombre) {
-              ZONAS_DATA[destinoId] = destinoNombre;
-            }
+          // Omitir la primera fila (encabezado: ID Origen, Nombre Origen, etc.)
+          if (index === 0 && isNaN(parseFloat(columnas[0]))) return;
+
+          if (columnas.length >= 5) {
+            const idO = columnas[0];
+            const nomO = columnas[1];
+            const idD = columnas[2];
+            const nomD = columnas[3];
+            
+            // Reemplazar coma por punto para asegurar la conversión decimal
+            const precioRaw = columnas[4].replace(',', '.');
+            const precio = parseFloat(precioRaw);
+
+            if (idO && nomO) ZONAS_DATA[idO] = nomO;
+            if (idD && nomD) ZONAS_DATA[idD] = nomD;
 
             if (!isNaN(precio)) {
-              MATRIZ_PRECIOS[origenId + "-" + destinoId] = precio;
-              MATRIZ_PRECIOS[destinoId + "-" + origenId] = precio; // Matriz bidireccional
+              MATRIZ_PRECIOS[idO + "-" + idD] = precio;
             }
           }
         });
 
+        if (Object.keys(ZONAS_DATA).length === 0) {
+          txtResultado.innerText = "Error: Hoja vacía o sin permisos de lectura";
+          return;
+        }
+
         poblarDesplegables();
       } catch (error) {
-        console.error("Error cargando Google Sheets:", error);
-        document.getElementById("txtResultado").innerText = "Error cargando tarifas";
+        console.error("Error al cargar la BD:", error);
+        txtResultado.innerText = "Error al conectar con la base de datos";
       }
     }
 
-    // --- POBLAR DESPLEGABLES CON LAS ZONAS DE GOOGLE SHEETS ---
     function poblarDesplegables() {
       const selectO = document.getElementById("origen");
       const selectD = document.getElementById("destino");
@@ -167,7 +172,7 @@
       selectO.innerHTML = '<option value="" disabled selected>Selecciona origen (retiro)</option>';
       selectD.innerHTML = '<option value="" disabled selected>Selecciona destino (entrega)</option>';
 
-      Object.keys(ZONAS_DATA).forEach(id => {
+      Object.keys(ZONAS_DATA).forEach(function(id) {
         const optO = document.createElement("option");
         optO.value = id;
         optO.textContent = ZONAS_DATA[id];
@@ -182,7 +187,6 @@
       document.getElementById("txtResultado").innerText = "Selecciona la ruta del envío";
     }
 
-    // --- LÓGICA DE CÁLCULO DE TARIFA ---
     function calcularTarifa() {
       const selectO = document.getElementById("origen");
       const selectD = document.getElementById("destino");
@@ -199,12 +203,8 @@
         return;
       }
 
-      if (o === d) {
-        precioActual = MATRIZ_PRECIOS[o + "-" + d] || 2.0;
-      } else {
-        const rutaKey = o + "-" + d;
-        precioActual = MATRIZ_PRECIOS[rutaKey] || 0.0;
-      }
+      const rutaKey = o + "-" + d;
+      precioActual = MATRIZ_PRECIOS[rutaKey] || 0.0;
 
       if (precioActual > 0) {
         txtResultado.innerText = "Total Estimado: $" + precioActual.toFixed(2);
@@ -213,7 +213,6 @@
       }
     }
 
-    // --- ENVÍO A WHATSAPP ---
     function enviarWhatsApp() {
       const telefono = document.getElementById("telefono").value;
       const referencia = document.getElementById("referencia").value;
@@ -239,10 +238,8 @@
       window.open(url, "_blank");
     }
 
-    // Inicializar la carga remota al iniciar la app
     document.addEventListener("DOMContentLoaded", cargarBaseDeDatos);
 
-    // --- MANIFEST DINÁMICO PARA PWA ---
     const manifestData = {
       name: "TÚ MANDADERO",
       short_name: "Tú Mandadero",
@@ -268,7 +265,7 @@
                      "self.addEventListener('fetch', function(e) { e.respondWith(fetch(e.request).catch(function() { return caches.match(e.request); })); });";
       const swBlob = new Blob([swCode], { type: 'text/javascript' });
       const swURL = URL.createObjectURL(swBlob);
-      navigator.serviceWorker.register(swURL + '?v=4').catch(function() {});
+      navigator.serviceWorker.register(swURL + '?v=7').catch(function() {});
     }
   </script>
 </body>

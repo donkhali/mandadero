@@ -107,7 +107,8 @@
 
   <script>
     const PHONE_NUMBER = "584143397243";
-    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1DvVaIoAIJT6MmCKR-R9Fv-JKSEN3TIQi8rN9_qY7jAw/export?format=csv&gid=0";
+    // URL de la hoja publicada como CSV en la web (sin autenticación requerida)
+    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS2XPrZvgzk_CYrEKrnOSdjU6E6Kt9_miaCh_fDGauVk6uxEiSs8rNmjxY76p_sehq0rIBh9fmhMBr_/pub?gid=0&single=true&output=csv";
 
     let ZONAS_DATA = {};
     let MATRIZ_PRECIOS = {};
@@ -131,7 +132,6 @@
             return c.trim().replace(/^"|"$/g, '');
           });
 
-          // Omitir la primera fila (encabezado: ID Origen, Nombre Origen, etc.)
           if (index === 0 && isNaN(parseFloat(columnas[0]))) return;
 
           if (columnas.length >= 5) {
@@ -140,7 +140,6 @@
             const idD = columnas[2];
             const nomD = columnas[3];
             
-            // Reemplazar coma por punto para asegurar la conversión decimal
             const precioRaw = columnas[4].replace(',', '.');
             const precio = parseFloat(precioRaw);
 
@@ -154,7 +153,7 @@
         });
 
         if (Object.keys(ZONAS_DATA).length === 0) {
-          txtResultado.innerText = "Error: Hoja vacía o sin permisos de lectura";
+          txtResultado.innerText = "Revisa el permiso de la hoja en Google Sheets";
           return;
         }
 
@@ -265,7 +264,7 @@
                      "self.addEventListener('fetch', function(e) { e.respondWith(fetch(e.request).catch(function() { return caches.match(e.request); })); });";
       const swBlob = new Blob([swCode], { type: 'text/javascript' });
       const swURL = URL.createObjectURL(swBlob);
-      navigator.serviceWorker.register(swURL + '?v=7').catch(function() {});
+      navigator.serviceWorker.register(swURL + '?v=8').catch(function() {});
     }
   </script>
 </body>
